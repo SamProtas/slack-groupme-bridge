@@ -1,0 +1,64 @@
+name:                slack-groupme-bridge
+version:             0.1.0.0
+-- synopsis:
+-- description:
+homepage:            https://github.com/SamProtas/slack-groupme-bridge#readme
+license:             BSD3
+license-file:        LICENSE
+author:              Sam Protas
+maintainer:          sam.protas@gmail.com
+copyright:           2017 Sam Protas
+category:            Web
+build-type:          Simple
+extra-source-files:  README.md
+cabal-version:       >=1.10
+
+library
+  hs-source-dirs:      src
+  exposed-modules:     Bridge
+                     , Configuration
+                     , GroupMe.Server
+                     , GroupMe.Types
+                     , Slack.Types
+                     , Slack.Utilities
+  build-depends:       base >= 4.7 && < 5
+                     , text
+                     , bytestring
+                     , dotenv
+                     , wuss
+                     , websockets
+                     , aeson
+                     , transformers
+                     , mtl
+                     , lens
+                     , time
+                     , async
+                     , lifted-async
+                     , wreq
+                     , servant
+                     , servant-server
+                     , wai
+                     , wai-extra
+                     , warp
+  default-language:    Haskell2010
+
+executable slack-groupme-bridge-exe
+  hs-source-dirs:      app
+  main-is:             Main.hs
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  build-depends:       base
+                     , slack-groupme-bridge
+  default-language:    Haskell2010
+
+test-suite slack-groupme-bridge-test
+  type:                exitcode-stdio-1.0
+  hs-source-dirs:      test
+  main-is:             Spec.hs
+  build-depends:       base
+                     , slack-groupme-bridge
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  default-language:    Haskell2010
+
+source-repository head
+  type:     git
+  location: https://github.com/SamProtas/slack-groupme-bridge
