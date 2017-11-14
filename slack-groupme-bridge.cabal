@@ -19,6 +19,8 @@ library
                      , Configuration
                      , GroupMe.Server
                      , GroupMe.Types
+                     , GroupMe.Utilities
+                     , Slack.Listener
                      , Slack.Types
                      , Slack.Utilities
   build-depends:       base >= 4.7 && < 5
@@ -31,12 +33,16 @@ library
                      , transformers
                      , mtl
                      , lens
+                     , expiring-cache-map
                      , time
                      , async
                      , lifted-async
+                     , network-uri
                      , wreq
                      , servant
                      , servant-server
+                     , stm
+                     , unordered-containers
                      , wai
                      , wai-extra
                      , warp

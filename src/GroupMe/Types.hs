@@ -25,7 +25,7 @@ data GroupMeWebhookAttachment = GroupMeWebhookPicture Text
 instance FromJSON GroupMeWebhookAttachment where
   parseJSON = withObject "GroupMeWebhookAttachment" $ \v -> do
     type_ <- v .: "type" :: Parser Text
-    case type_ of "image" -> v .: "url" >>= return . GroupMeWebhookPicture
+    case type_ of "image" -> GroupMeWebhookPicture <$> v .: "url"
                   _ -> return GroupMeWebhookOtherAttachment
 
 
@@ -34,7 +34,8 @@ instance FromJSON GroupMeWebhookAttachment where
 
 data GroupMeBotMessage = GroupMeBotMessage
   { _gmb_bot_id :: Text
-  , _gmb_text :: Text }
+  , _gmb_text :: Text
+  , _gmb_token :: Text }
   deriving (Show, Eq, Generic)
 instance ToJSON GroupMeBotMessage where
   toJSON = genericToJSON $ defaultOptions { fieldLabelModifier = drop 5 }

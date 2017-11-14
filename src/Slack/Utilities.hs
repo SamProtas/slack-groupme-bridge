@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Slack.Utilities where
 
-
+import Data.Maybe
 import Data.Monoid
 import GHC.Generics
 
@@ -9,8 +9,11 @@ import Control.Lens
 import Data.Aeson
 import Data.Aeson.Types
 import qualified Data.ByteString as B
+import qualified Data.ByteString.Char8 as C
 import Data.Text (Text)
+import qualified Data.Text as T
 import Network.Wreq
+import Network.URI
 
 import Configuration
 import GroupMe.Types
@@ -21,7 +24,6 @@ baseUrl = "https://slack.com/api/"
 
 postMessageUrl = baseUrl <> "chat.postMessage"
 
-
 sendMessage :: SlackConfig -> SlackBotMessage -> IO ()
 sendMessage config message = do
   let opts = defaults & header "Accept" .~ ["application/json"]
@@ -30,7 +32,14 @@ sendMessage config message = do
   res <- postWith opts postMessageUrl $ encode message
   return ()
 
+getUserInfoUrl = baseUrl <> "users.info"
 
-webhookToSlackMessage :: Text -> GroupMeWebhook -> SlackBotMessage
-webhookToSlackMessage channelId webhook =
-  SlackBotMessage channelId (webhook ^. gmw_text) True True False (webhook ^. gmw_name)
+getUser :: SlackConfig -> Text -> IO SlackUserResp
+getUser config userId = do
+  let url = getUserInfoUrl <> "?token=" <> C.unpack (config ^. slackAccessKey) <> "&user=" <> T.unpack userId
+  res <- get url
+  let body = res ^. responseBody
+  return $ fromMaybe (error "Failed to decode") (decode' body)
+
+getUserName :: SlackConfig -> Text -> IO Text
+getUserName config userId = (^. sur_user . su_name) <$> getUser config userId

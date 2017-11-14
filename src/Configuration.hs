@@ -23,12 +23,12 @@ data Config = Config
 
 data GroupMeConfig = GroupMeConfig
   { _configGroupMeAccessKey :: Text
-  , _configGroupMeGroupId :: Int }
+  , _configGroupMeBotId :: Text }
   deriving (Show, Eq)
 
 data SlackConfig = SlackConfig
   { _slackAccessKey :: B.ByteString
-  , _slackChannelId :: Text}
+  , _slackChannelId :: Text }
   deriving (Show)
 
 makeLenses 'GroupMeConfig
@@ -43,7 +43,7 @@ eitherGetConfig = do
      Config <$>
       (GroupMeConfig <$>
         cLookupText "GROUPME_ACCESS_KEY" <*>
-        cLookupInt "GROUPME_GROUP_ID") <*>
+        cLookupText "GROUPME_BOT_ID") <*>
       (SlackConfig <$>
         cLookupBs "SLACK_ACCESS_KEY" <*>
         cLookupText "SLACK_CHANNEL_ID")

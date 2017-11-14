@@ -52,9 +52,6 @@ handleWebhook config webhook = do
   mapM_ (liftIO . sendMessage slackConfig) mResponse
   return NoContent
 
-shouldRespond :: GroupMeWebhook -> Bool
-shouldRespond webhook = webhook ^. gmw_sender_type == "user" && (not . T.null $ webhook ^. gmw_text)
-
 buildResponse :: Text -> GroupMeWebhook -> Maybe SlackBotMessage
 buildResponse channelId webhook = do
   guard $ webhook ^. gmw_sender_type == "user"
