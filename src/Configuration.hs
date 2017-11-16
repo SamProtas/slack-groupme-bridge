@@ -35,6 +35,25 @@ makeLenses 'GroupMeConfig
 makeLenses 'SlackConfig
 makeLenses 'Config
 
+class (HasSlackConfig c, HasGroupMeConfig c) => HasConfig c where
+  config :: Lens' c Config
+
+instance HasConfig Config where
+  config = id
+
+class HasSlackConfig c where
+  slackConfig :: Lens' c SlackConfig
+instance HasSlackConfig SlackConfig where
+  slackConfig = id
+instance HasSlackConfig Config where
+  slackConfig = configSlack
+
+class HasGroupMeConfig c where
+  groupMeConfig :: Lens' c GroupMeConfig
+instance HasGroupMeConfig GroupMeConfig where
+  groupMeConfig = id
+instance HasGroupMeConfig Config where
+  groupMeConfig = configGroupMe
 
 eitherGetConfig :: IO (Either String Config)
 eitherGetConfig = do

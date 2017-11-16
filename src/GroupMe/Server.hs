@@ -26,6 +26,7 @@ import Configuration
 import GroupMe.Types
 import Slack.Types
 import Slack.Utilities
+import Types
 
 
 port = 5000
@@ -42,14 +43,23 @@ app config = serve api (server config)
 runServer :: Config -> IO ()
 runServer config = putStrLn ("Serving on port: " <> show port) >> run port (logStdout $ app config)
 
-server :: Config -> ServerT GroupMeAPI Handler
-server = handleWebhook
+serverT :: ServerT GroupMeAPI AppContext
+serverT = handleWebhook
 
-handleWebhook :: Config -> GroupMeWebhook -> Handler NoContent
-handleWebhook config webhook = do
-  let slackConfig = config ^. configSlack
-      mResponse = buildResponse (slackConfig ^. slackChannelId) webhook
-  mapM_ (liftIO . sendMessage slackConfig) mResponse
+server :: Config -> Server GroupMeAPI
+server config = enter transformer serverT
+  where transformer :: AppContext :~> Handler
+        transformer = NT transformer'
+
+        transformer' :: AppContext a -> Handler a
+        transformer' r = liftIO (runApp r config)
+
+handleWebhook :: GroupMeWebhook -> AppContext NoContent
+handleWebhook webhook = do
+  config <- askConfig
+  slackConfig <- askSlackConfig
+  let mResponse = buildResponse (slackConfig ^. slackChannelId) webhook
+  mapM_ sendMessage mResponse
   return NoContent
 
 buildResponse :: Text -> GroupMeWebhook -> Maybe SlackBotMessage
