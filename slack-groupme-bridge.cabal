@@ -23,6 +23,7 @@ library
                      , Slack.Listener
                      , Slack.Types
                      , Slack.Utilities
+                     , Types
   build-depends:       base >= 4.7 && < 5
                      , text
                      , bytestring
@@ -40,6 +41,7 @@ library
                      , lifted-async
                      , network-uri
                      , monad-control
+                     , monad-logger
                      , wreq
                      , servant
                      , servant-server

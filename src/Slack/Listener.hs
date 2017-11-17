@@ -14,6 +14,7 @@ import Control.Monad.STM
 import Control.Concurrent
 import Control.Concurrent.STM.TBQueue
 import Control.Monad.Base
+import Control.Monad.Logger
 import Control.Monad.Reader
 import Control.Monad.Trans.Control
 import Data.HashMap.Strict (HashMap)
@@ -41,23 +42,23 @@ import Types
 tshow :: Show a => a -> Text
 tshow = T.pack . show
 
-startWsListener :: (MonadReader r m, HasConfig r, MonadIO m, MonadBaseControl IO m, Forall (Pure m)) => m ()
+startWsListener :: (MonadReader r m, HasConfig r, MonadIO m, MonadBaseControl IO m, MonadLogger m, Forall (Pure m)) => m ()
 startWsListener = do
   res <- rtmConnect
   rtmListen res
 
 
-rtmConnect :: (MonadReader r m, HasSlackConfig r, MonadIO m) => m SlackRtmConnectResp
+rtmConnect :: (MonadReader r m, HasSlackConfig r, MonadIO m, MonadLogger m) => m SlackRtmConnectResp
 rtmConnect = do
   config <- askSlackConfig
-  liftIO $ putStrLn "Obtaining a websocket url."
+  logInfoN "Obtaining a websocket url."
   res <- liftIO $ post "https://slack.com/api/rtm.connect" ["token" := (config ^. slackAccessKey)]
   let eitherBody = eitherDecode' $ res ^. responseBody
   case eitherBody of Left err -> error err  -- TODO: handle error better
                      Right body -> return body
 
 
-rtmListen :: (MonadReader r m, HasConfig r, MonadIO m, MonadBaseControl IO m, Forall (Pure m)) =>
+rtmListen :: (MonadReader r m, HasConfig r, MonadIO m, MonadBaseControl IO m, MonadLogger m, Forall (Pure m)) =>
              SlackRtmConnectResp ->
              m ()
 rtmListen rtmConnectResp = do
@@ -67,12 +68,12 @@ rtmListen rtmConnectResp = do
       path' = uriPath uri
   nameCache <- newCache
   liftBaseOp (runSecureClient domain 443 path') $ \connection -> do
-    liftIO $ putStrLn "Listening to the slack websocket."
+    logInfoN "Listening to the slack websocket."
     queue <- liftIO $ newTBQueueIO 100
     let readLoop = do
           raw <- liftIO $ receiveData connection
           let eitherEvent = eitherDecodeStrict' raw :: Either String SlackEvent
-          case eitherEvent of Left err -> liftIO $ print err
+          case eitherEvent of Left err -> logErrorN $ T.pack err
                               Right event -> liftIO $ atomically (writeTBQueue queue event)
           readLoop
     let writeLoop = do

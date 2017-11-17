@@ -13,6 +13,7 @@ import Data.Aeson
 import Control.Exception (handle)
 import Control.Lens
 import Control.Monad.IO.Class
+import Control.Monad.Logger
 import Control.Monad.Reader
 import Control.Monad.Except
 import Data.Text (Text)
@@ -40,8 +41,11 @@ api = Proxy
 app :: Config -> Application
 app config = serve api (server config)
 
-runServer :: Config -> IO ()
-runServer config = putStrLn ("Serving on port: " <> show port) >> run port (logStdout $ app config)
+runServer :: AppContext ()
+runServer = do
+  logInfoN ("Serving on port: " <> T.pack (show port))
+  config <- askConfig
+  liftIO $ run port (logStdout $ app config)
 
 serverT :: ServerT GroupMeAPI AppContext
 serverT = handleWebhook
