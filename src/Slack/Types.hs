@@ -24,6 +24,7 @@ data SlackBotMessage = SlackBotMessage
   , _sbm_unfurl_media :: Bool
   , _sbm_link_names :: Bool
   , _sbm_username :: Text
+  , _sbm_icon_url :: Maybe Text
   }
   deriving (Show, Generic)
 instance ToJSON SlackBotMessage where

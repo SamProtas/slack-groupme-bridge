@@ -13,7 +13,9 @@ import Data.Text (Text)
 data GroupMeWebhook = GroupMeWebhook
   { _gmw_name :: Text
   , _gmw_sender_type :: Text
+  , _gmw_sender_id :: Text
   , _gmw_text :: Text
+  , _gmw_avatar_url :: Text
   , _gmw_attachments :: [GroupMeWebhookAttachment]}
   deriving (Show, Generic)
 instance FromJSON GroupMeWebhook where

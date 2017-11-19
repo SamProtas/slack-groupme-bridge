@@ -28,6 +28,7 @@ import GroupMe.Types
 import Slack.Types
 import Slack.Utilities
 import Types
+import Utilities
 
 
 port = 5000
@@ -60,18 +61,26 @@ server config = enter transformer serverT
 
 handleWebhook :: GroupMeWebhook -> AppContext NoContent
 handleWebhook webhook = do
-  config <- askConfig
   slackConfig <- askSlackConfig
-  let mResponse = buildResponse (slackConfig ^. slackChannelId) webhook
+  gmConfig <- askGroupMeConfig
+  let mResponse = buildResponse (slackConfig ^. slackChannelId) (gmConfig ^. configGroupMeBotId) webhook
   mapM_ sendMessage mResponse
   return NoContent
 
-buildResponse :: Text -> GroupMeWebhook -> Maybe SlackBotMessage
-buildResponse channelId webhook = do
-  guard $ webhook ^. gmw_sender_type == "user"
+buildResponse :: Text -> Text -> GroupMeWebhook -> Maybe SlackBotMessage
+buildResponse channelId botId webhook = do
+  guard $ webhook ^. gmw_sender_id /= botId
   guard $ not $ T.null finalText
-  return $ SlackBotMessage channelId finalText True True False $ webhook ^. gmw_name
+  return SlackBotMessage
+            { _sbm_channel = channelId
+            , _sbm_text = finalText
+            , _sbm_unfurl_links = True
+            , _sbm_unfurl_media = True
+            , _sbm_username = webhook ^. gmw_name
+            , _sbm_link_names = False
+            , _sbm_icon_url = icon_url }
     where
+      icon_url = if T.null (webhook ^. gmw_avatar_url) then Nothing else Just $ webhook ^. gmw_avatar_url
       attachmentText = T.intercalate "\n" $ webhook ^.. gmw_attachments . traverse . _GroupMeWebhookPicture
       webhookText = webhook ^. gmw_text
       finalText

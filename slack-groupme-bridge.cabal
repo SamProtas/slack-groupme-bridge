@@ -24,6 +24,7 @@ library
                      , Slack.Types
                      , Slack.Utilities
                      , Types
+                     , Utilities
   build-depends:       base >= 4.7 && < 5
                      , text
                      , bytestring

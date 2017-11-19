@@ -39,9 +39,8 @@ import Slack.Utilities hiding (sendMessage)
 import GroupMe.Types
 import GroupMe.Utilities
 import Types
+import Utilities
 
-tshow :: Show a => a -> Text
-tshow = T.pack . show
 
 startWsListener :: (MonadReader r m, HasConfig r, MonadIO m, MonadBaseControl IO m, MonadLogger m, Forall (Pure m), MonadCatch m) => m ()
 startWsListener = do
