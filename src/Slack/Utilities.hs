@@ -5,6 +5,7 @@ import Data.Maybe
 import Data.Monoid
 import GHC.Generics
 
+import Control.Exception.Safe
 import Control.Lens
 import Control.Monad.Reader
 import Data.Aeson
@@ -42,8 +43,7 @@ getUser :: SlackConfig -> Text -> IO SlackUserResp
 getUser config userId = do
   let url = getUserInfoUrl <> "?token=" <> C.unpack (config ^. slackAccessKey) <> "&user=" <> T.unpack userId
   res <- get url
-  let body = res ^. responseBody
-  return $ fromMaybe (error "Failed to decode") (decode' body)
+  either throwString return $ eitherDecode' $ res ^. responseBody
 
 getUserName :: SlackConfig -> Text -> IO Text
 getUserName config userId = (^. sur_user . su_name) <$> getUser config userId

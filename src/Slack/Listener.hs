@@ -48,13 +48,13 @@ startWsListener = do
   rtmListen res
 
 
-rtmConnect :: (MonadReader r m, HasSlackConfig r, MonadIO m, MonadLogger m) => m SlackRtmConnectResp
+rtmConnect :: (MonadReader r m, HasSlackConfig r, MonadIO m, MonadLogger m, MonadThrow m) => m SlackRtmConnectResp
 rtmConnect = do
   config <- askSlackConfig
   logInfoN "Obtaining a websocket url."
   res <- liftIO $ post "https://slack.com/api/rtm.connect" ["token" := (config ^. slackAccessKey)]
   let eitherBody = eitherDecode' $ res ^. responseBody
-  case eitherBody of Left err -> error err  -- TODO: handle error better
+  case eitherBody of Left err -> throwString err
                      Right body -> return body
 
 
@@ -62,9 +62,12 @@ rtmListen :: (MonadReader r m, HasConfig r, MonadIO m, MonadBaseControl IO m, Mo
              SlackRtmConnectResp ->
              m ()
 rtmListen rtmConnectResp = do
-  let uri = fromMaybe (error "Could not parse websockets url.") $ parseAbsoluteURI $ rtmConnectResp ^. srtmr_url
-      authority' = fromMaybe (error "Could not parse webhsockets domain.") $ uriAuthority uri
-      domain = uriRegName authority'
+  let eitherUriAuthority = do
+        uri <- maybe (fail "Could not parse websockets url.") return $ parseAbsoluteURI $ rtmConnectResp ^. srtmr_url
+        authority' <- maybe (fail "Could not parse websockets domain.") return $ uriAuthority uri
+        return (uri, authority')
+  (uri, authority') <- either throwString return eitherUriAuthority
+  let domain = uriRegName authority'
       path' = uriPath uri
   nameCache <- newCache
   liftBaseOp (runSecureClient domain 443 path') $ \connection -> do
