@@ -11,6 +11,7 @@ import Data.Aeson
 import Data.Aeson.Types
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Char8 as C
+import qualified Data.ByteString.Lazy as BL
 import Data.Text (Text)
 import qualified Data.Text as T
 import Network.Wreq
@@ -46,3 +47,10 @@ getUser config userId = do
 
 getUserName :: SlackConfig -> Text -> IO Text
 getUserName config userId = (^. sur_user . su_name) <$> getUser config userId
+
+getFile :: (MonadReader r m, HasSlackConfig r, MonadIO m) => Text -> m B.ByteString
+getFile url = do
+  sConfig <- askSlackConfig
+  let opts = defaults & header "Authorization" .~ ["Bearer " <> sConfig ^. slackAccessKey]
+  res <- liftIO $ getWith opts $ T.unpack url
+  return $ BL.toStrict $ res ^. responseBody

@@ -6,6 +6,7 @@
 module Types where
 
 import Control.Lens
+import Control.Exception.Safe
 import Control.Monad.Base
 import Control.Monad.Logger
 import Control.Monad.Reader
@@ -16,7 +17,7 @@ import Configuration
 
 newtype AppContextT m a = AppContextT { unAppT :: (ReaderT Config) (LoggingT m) a }
                                       deriving ( Functor, Applicative, Monad, MonadReader Config, MonadIO, MonadLogger
-                                                , MonadLoggerIO)
+                                                , MonadLoggerIO, MonadThrow, MonadCatch)
 
 runAppT :: MonadIO m => AppContextT m a -> Config -> m a
 runAppT (AppContextT m) c = runStdoutLoggingT (runReaderT m c)

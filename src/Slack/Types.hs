@@ -40,6 +40,7 @@ instance FromJSON SlackRtmConnectResp where
 
 
 data SlackEvent = SlackEventMessage SlackMessage
+                | SlackEventFileShare SlackFileShare
                 | SlackEventOther Value
                 deriving (Show, Generic)
 instance FromJSON SlackEvent where
@@ -47,6 +48,7 @@ instance FromJSON SlackEvent where
     type_ <- v .: "type" :: Parser Text
     mSubtype <- v .:? "subtype" :: Parser (Maybe Text)
     case (type_, mSubtype) of ("message", Nothing) -> SlackEventMessage <$> parseJSON (Object v)
+                              ("message", Just "file_share") -> SlackEventFileShare <$> parseJSON (Object v)
                               _ -> return $ SlackEventOther (Object v)
 
 data SlackMessage = SlackMessage
@@ -56,6 +58,29 @@ data SlackMessage = SlackMessage
   deriving (Show, Generic)
 instance FromJSON SlackMessage where
   parseJSON = genericParseJSON $ defaultOptions { fieldLabelModifier = drop 4 }
+
+data SlackFileShare = SlackFileShare
+  { _sfs_user :: Text
+  , _sfs_channel :: Text
+  , _sfs_file :: SlackFile }
+  deriving (Show, Generic)
+instance FromJSON SlackFileShare where
+  parseJSON = genericParseJSON $ defaultOptions { fieldLabelModifier = drop 5 }
+
+data SlackFile = SlackFile
+  { _sf_name :: Text
+  , _sf_url_private :: Text
+  , _sf_initial_comment :: Maybe SlackFileComment }
+  deriving (Show, Generic)
+instance FromJSON SlackFile where
+  parseJSON = genericParseJSON $ defaultOptions { fieldLabelModifier = drop 4 }
+
+data SlackFileComment = SlackFileComment
+  { _sfc_comment :: Text
+  , _sfc_user :: Text }
+  deriving (Show, Generic)
+instance FromJSON SlackFileComment where
+  parseJSON = genericParseJSON $ defaultOptions { fieldLabelModifier = drop 5 }
 
 
 data SlackUserResp = SlackUserResp
@@ -79,3 +104,6 @@ makePrisms ''SlackEvent
 makeLenses 'SlackMessage
 makeLenses 'SlackUserResp
 makeLenses 'SlackUser
+makeLenses 'SlackFileShare
+makeLenses 'SlackFile
+makeLenses 'SlackFileComment

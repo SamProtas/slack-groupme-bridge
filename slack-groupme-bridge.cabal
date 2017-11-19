@@ -40,9 +40,11 @@ library
                      , async
                      , lifted-async
                      , network-uri
+                     , mime-types
                      , monad-control
                      , monad-logger
                      , wreq
+                     , safe-exceptions
                      , servant
                      , servant-server
                      , stm

@@ -29,13 +29,26 @@ instance FromJSON GroupMeWebhookAttachment where
                   _ -> return GroupMeWebhookOtherAttachment
 
 
+data GroupMeUploadResp = GroupMeUploadResp
+  { _gmur_url :: Text
+  , _gmur_picture_url :: Text }
+  deriving (Show, Generic)
+instance FromJSON GroupMeUploadResp where
+  parseJSON = genericParseJSON $ defaultOptions { fieldLabelModifier = drop 6 }
+
+newtype GroupMeUploadRespWrapper = GroupMeUploadRespWrapper
+  { _gmurw_payload :: GroupMeUploadResp }
+  deriving (Show, Generic)
+instance FromJSON GroupMeUploadRespWrapper where
+  parseJSON = genericParseJSON $ defaultOptions { fieldLabelModifier = drop 7}
 
 
 
 data GroupMeBotMessage = GroupMeBotMessage
   { _gmb_bot_id :: Text
   , _gmb_text :: Text
-  , _gmb_token :: Text }
+  , _gmb_token :: Text
+  , _gmb_picture_url :: Maybe Text }
   deriving (Show, Eq, Generic)
 instance ToJSON GroupMeBotMessage where
   toJSON = genericToJSON $ defaultOptions { fieldLabelModifier = drop 5 }
@@ -43,5 +56,7 @@ instance ToJSON GroupMeBotMessage where
 
 
 makePrisms ''GroupMeWebhookAttachment
-makeLenses ''GroupMeWebhook
-makeLenses ''GroupMeBotMessage
+makeLenses 'GroupMeWebhook
+makeLenses 'GroupMeBotMessage
+makeLenses 'GroupMeUploadResp
+makeLenses 'GroupMeUploadRespWrapper
