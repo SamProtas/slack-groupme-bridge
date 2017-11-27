@@ -79,9 +79,8 @@ buildResponse channelId botId webhook = do
             , _sbm_unfurl_media = True
             , _sbm_username = webhook ^. gmw_name
             , _sbm_link_names = False
-            , _sbm_icon_url = icon_url }
+            , _sbm_icon_url = webhook ^. gmw_avatar_url }
     where
-      icon_url = if T.null (webhook ^. gmw_avatar_url) then Nothing else Just $ webhook ^. gmw_avatar_url
       attachmentText = T.intercalate "\n" $ webhook ^.. gmw_attachments . traverse . _GroupMeWebhookPicture
       webhookText = webhook ^. gmw_text
       finalText

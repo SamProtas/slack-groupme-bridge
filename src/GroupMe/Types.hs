@@ -15,7 +15,7 @@ data GroupMeWebhook = GroupMeWebhook
   , _gmw_sender_type :: Text
   , _gmw_sender_id :: Text
   , _gmw_text :: Text
-  , _gmw_avatar_url :: Text
+  , _gmw_avatar_url :: Maybe Text
   , _gmw_attachments :: [GroupMeWebhookAttachment]}
   deriving (Show, Generic)
 instance FromJSON GroupMeWebhook where
