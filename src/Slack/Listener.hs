@@ -2,6 +2,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TemplateHaskell #-}
 module Slack.Listener where
 
 import Control.Monad
@@ -34,6 +35,8 @@ import Network.WebSockets (ClientApp, receiveData, sendClose, sendTextData, Conn
 import Network.URI
 
 import Configuration
+import Monitoring.Sentry
+import Monitoring.Sentry.Configuration
 import Slack.Types
 import Slack.Utilities hiding (sendMessage)
 import GroupMe.Types
@@ -51,7 +54,7 @@ startWsListener = do
 rtmConnect :: (MonadReader r m, HasSlackConfig r, MonadIO m, MonadLogger m, MonadThrow m) => m SlackRtmConnectResp
 rtmConnect = do
   config <- askSlackConfig
-  logInfoN "Obtaining a websocket url."
+  $(logInfo) "Obtaining a websocket url."
   res <- liftIO $ post "https://slack.com/api/rtm.connect" ["token" := (config ^. slackAccessKey)]
   let eitherBody = eitherDecode' $ res ^. responseBody
   case eitherBody of Left err -> throwString err
@@ -71,7 +74,7 @@ rtmListen rtmConnectResp = do
       path' = uriPath uri
   nameCache <- newCache
   liftBaseOp (runSecureClient domain 443 path') $ \connection -> do
-    logInfoN "Listening to the slack websocket."
+    $(logInfo) "Listening to the slack websocket."
     queue <- liftIO $ newTBQueueIO 100
     let queueEvent event = liftIO $ atomically (writeTBQueue queue event)
     let readLoop = do
@@ -87,10 +90,12 @@ rtmListen rtmConnectResp = do
           writeLoop
     race_ readLoop writeLoop
 
-loopErrorHandler :: (MonadLogger m, MonadThrow m) => SomeException -> m ()
+loopErrorHandler :: (MonadLogger m, MonadThrow m)
+                 => SomeException
+                 -> m ()
 loopErrorHandler e = do
   when (connectionClosed e) $ throw ConnectionClosed
-  logErrorN $ tshow e
+  $(logError) $ tshow e
     where mConnectionExc = fromException :: SomeException -> Maybe ConnectionException
           mClosedExc ConnectionClosed = Just ConnectionClosed
           mClosedExc _ = Nothing
@@ -141,7 +146,6 @@ mBuildResponse cache event = case event of (SlackEventOther val) -> return Nothi
 
 transferSlackImageToGroupMe :: (MonadReader r m, HasConfig r, MonadIO m, MonadLogger m, MonadThrow m) => SlackFile -> m Text
 transferSlackImageToGroupMe slackFile = do
-  logDebugN $ tshow slackFile
   fileData <- getFile $ slackFile ^. sf_url_private
   gmUploadRes <- uploadPicture (slackFile ^. sf_name) fileData
   return $ gmUploadRes ^. gmur_url

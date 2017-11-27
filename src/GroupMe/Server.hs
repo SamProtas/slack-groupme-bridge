@@ -2,6 +2,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE TemplateHaskell #-}
 module GroupMe.Server
     ( runServer
     ) where
@@ -44,7 +45,7 @@ app config = serve api (server config)
 
 runServer :: AppContext ()
 runServer = do
-  logInfoN ("Serving on port: " <> T.pack (show port))
+  $(logInfo) ("Serving on port: " <> T.pack (show port))
   config <- askConfig
   liftIO $ run port (logStdout $ app config)
 

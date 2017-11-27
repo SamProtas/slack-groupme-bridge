@@ -17,6 +17,9 @@ library
   hs-source-dirs:      src
   exposed-modules:     Bridge
                      , Configuration
+                     , Logging
+                     , Monitoring.Sentry
+                     , Monitoring.Sentry.Configuration
                      , GroupMe.Server
                      , GroupMe.Types
                      , GroupMe.Utilities
@@ -42,6 +45,7 @@ library
                      , lifted-async
                      , network-uri
                      , mime-types
+                     , fast-logger
                      , monad-control
                      , monad-logger
                      , wreq
@@ -49,6 +53,7 @@ library
                      , servant
                      , servant-server
                      , stm
+                     , raven-haskell
                      , unordered-containers
                      , wai
                      , wai-extra
