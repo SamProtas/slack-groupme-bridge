@@ -16,14 +16,12 @@ sentryLog :: (MonadIO m)
             => SentryService
             -> SentryLevel
             -> String -- ^. Message
-            -> String -- ^. Module
-            -> String -- ^. Value
             -> m ()
-sentryLog service lvl msg mdl value = 
+sentryLog service lvl msg = 
   liftIO $ register
              service
              "bridge.sentry.logger"
              lvl
-             msg $
-               exception value Nothing (Just mdl)
+             msg
+             id
 

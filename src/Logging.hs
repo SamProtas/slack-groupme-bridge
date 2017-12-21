@@ -28,10 +28,10 @@ type LogFnArgs = Loc -> LogSource -> LogLevel -> LogStr
 type LogFn = Loc -> LogSource -> LogLevel -> LogStr -> IO ()
 
 sentryLoggerFn service loc src lvl str = do
-  let mdl = loc_module loc
-      lvl' = lvlToSentryLevel lvl
-      str' = C.unpack $ fromLogStr str
-  sentryLog service lvl' str' mdl str'
+  let lvl' = lvlToSentryLevel lvl
+      msg = defaultLogStr loc src lvl str
+      msg' = C.unpack . fromLogStr $ msg
+  sentryLog service lvl' msg'
 
 runSentryLoggingT :: (MonadIO m) => SentryService -> LoggingT m a -> m a
 runSentryLoggingT service m = runLoggingT m (sentryLoggerFn service)
